@@ -119,6 +119,24 @@ Browser                    FastAPI                     ComfyUI
 
 ---
 
+## ⚡ Performance
+
+> Benchmarked using [`benchmark.py`](benchmark.py) on a local machine with ComfyUI.
+
+| Metric | Value |
+|--------|-------|
+| Inference time (warm) | **~2.1s** |
+| Cold start (first run, model loading) | ~24s |
+| Resolution | 512×512 |
+| Sampler | LCM (2 steps) |
+| Denoise strength | 0.4 |
+| Model | DreamShaper8_LCM |
+| LoRA | Lorena_Style (strength 1.0) |
+
+> **Note:** The first generation takes ~24s as ComfyUI loads the checkpoint + LoRA into memory. Subsequent generations run in ~2s.
+
+---
+
 ## 📝 Usage
 
 1. Click the **+** button or drag & drop an image onto the input area
