@@ -93,15 +93,6 @@
       "title": "Save Image"
     }
   },
-  "10": {
-    "inputs": {
-      "image": "butterfly.png"
-    },
-    "class_type": "LoadImage",
-    "_meta": {
-      "title": "Load Image"
-    }
-  },
   "11": {
     "inputs": {
       "pixels": [
