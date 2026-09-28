@@ -1,0 +1,26 @@
+# Virtual environments
+ori/
+venv/
+.venv/
+env/
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+dist/
+build/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Screen recordings (too large for GitHub)
+*.gif
+!demo.gif
+*.mp4
+
+# IDE
+.vscode/
+.idea/

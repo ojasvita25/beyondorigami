@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Display Image</title>
+
+  <!-- Google Font -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="./static/style.css">
+</head>
+<body>
+  <div id="background"></div>
+
+  <div id="input-wrapper">
+    <div id="input-container">
+      <button id="upload-btn" title="Upload Image">+</button>
+      <input type="file" id="file-input" accept="image/*" />
+      <input type="text" id="user-input" autofocus placeholder="TYPE YOUR PROMPT" />
+      <button id="submit-btn" title="Reimagine">→</button>
+      <button id="dice-btn">Surprise Dice</button>
+      <a id="download-link" style="display:none;" download="origami_collage.png">Download Collage</a>
+      <canvas id="dice-canvas" width="768" height="1152" style="display:none;"></canvas>
+      <button id="clear-history-btn" title="Clear Saved Images">🗑️ Clear History</button>
+
+    </div>
+  </div>
+
+  <div class="hint">Note: Click + for image → to Reimagine</div>
+
+  <script>
+    function getRandom6FromHistory() {
+      const stored = localStorage.getItem('imageHistory');
+      if (!stored) return [];
+      const history = JSON.parse(stored);
+      console.log("history", history)
+      if (history.length < 6) return [];
+
+      // Shuffle and take 6
+      const shuffled = history.sort(() => 0.5 - Math.random());
+      return shuffled.slice(0, 6);
+    }
+
+    async function renderDiceCanvas(picks) {
+      const canvas = document.getElementById("dice-canvas");
+      const ctx = canvas.getContext("2d");
+
+      const gridCols = 2;
+      const gridRows = 3;
+      const cellWidth = canvas.width / gridCols;
+      const cellHeight = canvas.height / gridRows;
+
+      // Clear previous
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      for (let i = 0; i < picks.length; i++) {
+        const img = new Image();
+        img.crossOrigin = "anonymous"; // Needed if images are from a server
+
+        await new Promise((resolve, reject) => {
+          img.onload = () => {
+            const x = (i % gridCols) * cellWidth;
+            const y = Math.floor(i / gridCols) * cellHeight;
+            ctx.drawImage(img, x, y, cellWidth, cellHeight);
+            resolve();
+          };
+          img.onerror = reject;
+          img.src = picks[i].outputImageURL;
+        });
+      }
+
+      // Generate downloadable image
+      const dataURL = canvas.toDataURL("image/png");
+      const downloadLink = document.getElementById("download-link");
+      downloadLink.href = dataURL;
+      downloadLink.style.display = "inline";
+      downloadLink.textContent = "📥 Download Your Origami Collage";
+    }
+      
+
+    function saveToHistory(prompt, inputImageURL, outputImageURL) {
+        const existing = JSON.parse(localStorage.getItem("imageHistory")) || [];
+        console.log(existing)
+        existing.push({ prompt, inputImageURL, outputImageURL, time: Date.now() });
+        localStorage.setItem("imageHistory", JSON.stringify(existing));
+      }
+  
+    function setUploadedBackground(file) {
+      const img = new Image();
+      const reader = new FileReader();
+
+      reader.onload = () => {
+        img.src = reader.result;
+      };
+
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        canvas.width = 512;
+        canvas.height = 512;
+        const ctx = canvas.getContext('2d');
+
+        // Bilinear interpolation settings
+        ctx.imageSmoothingEnabled = true;
+        ctx.imageSmoothingQuality = 'high';
+
+        // Center crop calculation
+        const minSize = Math.min(img.width, img.height);
+        const sx = (img.width - minSize) / 2;
+        const sy = (img.height - minSize) / 2;
+
+        ctx.drawImage(
+          img,
+          sx, sy, minSize, minSize,  // Source crop box
+          0, 0, 512, 512             // Destination size
+        );
+
+        // Set as background
+        const resizedURL = canvas.toDataURL('image/png');
+        if (uploadedFileURL) {
+          URL.revokeObjectURL(uploadedFileURL);
+        }
+        uploadedFileURL = resizedURL;
+        background.style.backgroundImage = `url(${resizedURL})`;
+        background.style.opacity = 1;
+        background.style.filter = 'none';
+      };
+
+      reader.readAsDataURL(file);
+    }
+
+    const inputField = document.getElementById('user-input');
+    const background = document.getElementById('background');
+    const fileInput = document.getElementById('file-input');
+    const uploadBtn = document.getElementById('upload-btn');
+    const inputWrapper = document.getElementById('input-wrapper');
+    const submitBtn = document.getElementById('submit-btn');
+
+    let uploadedFileURL = null;
+
+    uploadBtn.addEventListener('click', () => {
+      fileInput.click();
+    });
+
+    fileInput.addEventListener('change', (e) => {
+      if (e.target.files.length > 0) {
+        setUploadedBackground(e.target.files[0]);
+      }
+    });
+
+    inputWrapper.addEventListener('dragover', (e) => {
+      e.preventDefault();
+      inputWrapper.classList.add('dragover');
+    });
+
+    inputWrapper.addEventListener('dragleave', (e) => {
+      e.preventDefault();
+      inputWrapper.classList.remove('dragover');
+    });
+
+    inputWrapper.addEventListener('drop', (e) => {
+      e.preventDefault();
+      inputWrapper.classList.remove('dragover');
+      const dt = e.dataTransfer;
+      if (dt.files && dt.files.length > 0) {
+        fileInput.files = dt.files;
+        setUploadedBackground(dt.files[0]);
+      }
+    });
+
+    submitBtn.addEventListener('click', fetchImage);
+    
+    function toBase64(file) {
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onloadend = () => {
+          const base64String = reader.result.split(',')[1]; // Remove data:image/...;base64,
+          resolve(base64String);
+        };
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+      });
+    }
+
+    async function fetchImage() {
+      const inputValue = inputField.value.trim();
+      const file = fileInput.files[0];
+      if (!inputValue || !file) return;
+
+      background.style.filter = 'blur(8px)';
+      background.style.opacity = 1;
+
+      try {
+        // Convert image to base64
+        const base64Image = await toBase64(file);
+        const payload = {
+          prompt: inputValue,
+          image: base64Image
+        };
+        const response = await fetch('http://127.0.0.1:8000/get-image', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(payload)
+        });
+
+        if (!response.ok) throw new Error('Image not found');
+
+        const blob = await response.blob();
+        const imageURL = URL.createObjectURL(blob);
+        background.style.backgroundImage = `url(${imageURL})`;
+        background.style.filter = 'blur(0px)';
+        saveToHistory(inputValue, uploadedFileURL, imageURL);
+
+      } catch (err) {
+        console.error('Error:', err);
+      }
+    }
+
+    document.getElementById("dice-btn").addEventListener("click", async () => {
+      const picks = getRandom6FromHistory();
+      console.log(picks);
+      if (picks.length < 6) {
+        alert("Not enough past generations!");
+        return;
+      }
+      await renderDiceCanvas(picks);
+    });
+
+    document.getElementById("clear-history-btn").addEventListener("click", () => {
+      localStorage.removeItem("imageHistory");
+      alert("History cleared!");
+    });
+    </script>
+</body>
+</html>
