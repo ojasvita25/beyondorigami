@@ -8,6 +8,5 @@ transformers
 accelerate
 safetensors
 spaces
-gradio>=5.0.0
-huggingface_hub==0.24.7
+gradio>=5.16.0
 websocket-client
