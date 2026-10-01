@@ -41,8 +41,12 @@ def generate_image(input_image: Image.Image, prompt: str, steps: int = 8, cfg: f
     if actual_steps < 1:
         steps = int(1.0 / max(strength, 0.05)) + 1
 
-    # 3. Resize to 512x512 for pipeline inference
-    input_img = input_image.convert("RGB").resize((512, 512), Image.LANCZOS)
+    # 3. Calculate aspect-ratio-preserving dimensions (max dimension 512, divisible by 8)
+    scale = 512.0 / max(orig_w, orig_h)
+    target_w = max(64, int(round((orig_w * scale) / 8.0)) * 8)
+    target_h = max(64, int(round((orig_h * scale) / 8.0)) * 8)
+
+    input_img = input_image.convert("RGB").resize((target_w, target_h), Image.LANCZOS)
     pipe.to("cuda")
     output = pipe(
         prompt=prompt,
@@ -90,7 +94,7 @@ with gr.Blocks(title="Beyond Origami") as demo:
 
     gr.Examples(
         examples=[
-            ["static/examples/butterfly.jpg", "futuristic"],
+            ["static/examples/butterfly.jpg", "futuristic robot"],
             ["static/examples/spider.jpg", "cat"],
         ],
         inputs=[img_in, prompt_in],
