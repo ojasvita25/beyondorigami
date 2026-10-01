@@ -38,17 +38,21 @@ def generate_image_gpu(input_image: Image.Image, prompt: str):
     return output
 
 
-# Create Gradio Interface - enables ZeroGPU startup hook detection
-demo = gr.Interface(
-    fn=generate_image_gpu,
-    inputs=[
-        gr.Image(type="pil", label="Upload Fold"),
-        gr.Textbox(label="Prompt", placeholder="Describe how to reimagine your fold...")
-    ],
-    outputs=gr.Image(type="pil", label="Reimagined Origami"),
-    title="Beyond Origami",
-    description="Origami x AI reimaginings powered by SD 1.5 LCM on Free ZeroGPU."
-)
+# Create Gradio Blocks UI (compatible with ZeroGPU startup detection & Gradio 5 schema)
+with gr.Blocks(title="Beyond Origami") as demo:
+    gr.Markdown("# Beyond Origami\nOrigami x AI reimaginings powered by SD 1.5 LCM on Free ZeroGPU.")
+    with gr.Row():
+        img_in = gr.Image(type="pil", label="Upload Fold")
+        prompt_in = gr.Textbox(label="Prompt", placeholder="Describe how to reimagine your fold...")
+    btn = gr.Button("Reimagine", variant="primary")
+    img_out = gr.Image(type="pil", label="Reimagined Origami")
+
+    btn.click(
+        fn=generate_image_gpu,
+        inputs=[img_in, prompt_in],
+        outputs=img_out,
+        api_name="generate"
+    )
 
 # Enable CORS on demo.app
 demo.app.add_middleware(
