@@ -64,7 +64,7 @@ def generate_image(input_image: Image.Image, prompt: str, steps: int = 8, cfg: f
 
 # Clean & simple Gradio UI for Hugging Face Space
 with gr.Blocks(title="Beyond Origami") as demo:
-    gr.Markdown("# 🎨 Beyond Origami\nUpload an image of your fold or pick a sample origami image below, then enter a prompt to reimagine your Origami.")
+    gr.Markdown("# Beyond Origami\nUpload an image of your fold or pick a sample origami image below, then enter a prompt to reimagine your Origami.")
 
     with gr.Row():
         with gr.Column():
