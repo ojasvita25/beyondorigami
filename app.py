@@ -57,7 +57,8 @@ with gr.Blocks(title="Beyond Origami") as demo:
         fn=generate_image,
         inputs=[img_in, prompt_in],
         outputs=img_out,
+        api_name=False  # Prevents Gradio schema parser TypeError on gr.Image
     )
 
 if __name__ == "__main__":
-    demo.launch()
+    demo.launch(server_name="0.0.0.0", server_port=7860)
