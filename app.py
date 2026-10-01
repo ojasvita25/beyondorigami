@@ -29,14 +29,19 @@ if os.path.exists(CUSTOM_LORA):
 
 # HF ZeroGPU function allocation
 @spaces.GPU
-def generate_image(input_image: Image.Image, prompt: str, steps: int = 6, cfg: float = 1.5, strength: float = 0.45):
+def generate_image(input_image: Image.Image, prompt: str, steps: int = 8, cfg: float = 1.5, strength: float = 0.45):
     if input_image is None or not prompt or not prompt.strip():
         return None
 
     # 1. Capture original dimensions & aspect ratio
     orig_w, orig_h = input_image.size
 
-    # 2. Resize to 512x512 for pipeline inference
+    # 2. Prevent 0 actual steps calculation in diffusers (steps * strength >= 1)
+    actual_steps = int(steps * strength)
+    if actual_steps < 1:
+        steps = int(1.0 / max(strength, 0.05)) + 1
+
+    # 3. Resize to 512x512 for pipeline inference
     input_img = input_image.convert("RGB").resize((512, 512), Image.LANCZOS)
     pipe.to("cuda")
     output = pipe(
@@ -48,7 +53,7 @@ def generate_image(input_image: Image.Image, prompt: str, steps: int = 6, cfg: f
         strength=float(strength),
     ).images[0]
 
-    # 3. Resize output back to the original input aspect ratio & size
+    # 4. Resize output back to the original input aspect ratio & size
     output = output.resize((orig_w, orig_h), Image.LANCZOS)
     return output
 
@@ -67,7 +72,7 @@ with gr.Blocks(title="Beyond Origami") as demo:
             )
 
             with gr.Accordion("⚙️ Quality & Advanced Settings", open=False):
-                steps_slider = gr.Slider(minimum=2, maximum=12, value=6, step=1, label="Inference Steps (LCM)")
+                steps_slider = gr.Slider(minimum=4, maximum=20, value=8, step=1, label="Inference Steps (LCM)")
                 strength_slider = gr.Slider(minimum=0.10, maximum=0.90, value=0.45, step=0.05, label="Denoise Strength")
                 cfg_slider = gr.Slider(minimum=1.0, maximum=4.0, value=1.5, step=0.1, label="CFG Scale")
 
