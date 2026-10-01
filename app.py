@@ -1,3 +1,4 @@
+import os
 import torch
 import spaces
 from PIL import Image
@@ -13,26 +14,42 @@ pipe = AutoPipelineForImage2Image.from_pretrained(
 )
 pipe.scheduler = LCMScheduler.from_config(pipe.scheduler.config)
 
-# Load LCM LoRA for fast 2-4 step inference
+# Load LCM LoRA for fast inference
 pipe.load_lora_weights("latent-consistency/lcm-lora-sdv1-5")
+
+# Auto-detect and load custom Lorena_Style LoRA if uploaded to the space
+CUSTOM_LORA = "Lorena_Style.safetensors"
+if os.path.exists(CUSTOM_LORA):
+    try:
+        pipe.load_lora_weights(".", weight_name=CUSTOM_LORA, adapter_name="lorena")
+        print(f"Loaded custom LoRA: {CUSTOM_LORA}")
+    except Exception as e:
+        print(f"Failed to load {CUSTOM_LORA}: {e}")
 
 
 # HF ZeroGPU function allocation
 @spaces.GPU
-def generate_image(input_image: Image.Image, prompt: str):
+def generate_image(input_image: Image.Image, prompt: str, steps: int = 6, cfg: float = 1.5, strength: float = 0.45):
     if input_image is None or not prompt or not prompt.strip():
         return None
 
-    input_img = input_image.convert("RGB").resize((512, 512))
+    # 1. Capture original dimensions & aspect ratio
+    orig_w, orig_h = input_image.size
+
+    # 2. Resize to 512x512 for pipeline inference
+    input_img = input_image.convert("RGB").resize((512, 512), Image.LANCZOS)
     pipe.to("cuda")
     output = pipe(
         prompt=prompt,
-        negative_prompt="bad anatomy, extra fingers, watermark, (worst quality, low quality:1.4)",
+        negative_prompt="bad anatomy, extra fingers, watermark, blurred, low quality, distortion, noise",
         image=input_img,
-        num_inference_steps=4,
-        guidance_scale=1.5,
-        strength=0.4,  # Denoise strength matching original workflow
+        num_inference_steps=int(steps),
+        guidance_scale=float(cfg),
+        strength=float(strength),
     ).images[0]
+
+    # 3. Resize output back to the original input aspect ratio & size
+    output = output.resize((orig_w, orig_h), Image.LANCZOS)
     return output
 
 
@@ -48,6 +65,12 @@ with gr.Blocks(title="Beyond Origami") as demo:
                 placeholder="e.g. bioluminescent crystal wings, masterpiece, highly detailed",
                 lines=2
             )
+
+            with gr.Accordion("⚙️ Quality & Advanced Settings", open=False):
+                steps_slider = gr.Slider(minimum=2, maximum=12, value=6, step=1, label="Inference Steps (LCM)")
+                strength_slider = gr.Slider(minimum=0.10, maximum=0.90, value=0.45, step=0.05, label="Denoise Strength")
+                cfg_slider = gr.Slider(minimum=1.0, maximum=4.0, value=1.5, step=0.1, label="CFG Scale")
+
             btn = gr.Button("✨ Reimagine Fold", variant="primary")
 
         with gr.Column():
@@ -55,7 +78,7 @@ with gr.Blocks(title="Beyond Origami") as demo:
 
     btn.click(
         fn=generate_image,
-        inputs=[img_in, prompt_in],
+        inputs=[img_in, prompt_in, steps_slider, cfg_slider, strength_slider],
         outputs=img_out,
         api_name=False
     )
