@@ -1,0 +1,140 @@
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+  }
+
+  html, body {
+    height: 100%;
+    width: 100%;
+    font-family: 'Inter', sans-serif;
+    position: relative;
+  }
+
+  body {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    overflow: hidden;
+    background-color: #f5e0d0;
+    user-select: none;
+  }
+
+  #background {
+    position: absolute;
+    top: 0;
+    left: 0;
+    height: 100%;
+    width: 100%;
+    background-size: 16.66vw auto;
+    background-repeat: repeat;
+    background-position: center;
+    opacity: 1;
+    filter: blur(0px);
+    transition: opacity 0.5s ease-in-out, filter 1.5s ease;
+    z-index: 0;
+  }
+
+  #input-wrapper {
+    position: relative;
+    z-index: 2;
+    text-align: center;
+    width: 80vw;
+  }
+
+  input[type="text"] {
+  background: none;
+  border: none;
+  border-bottom: 1px solid #ffffff;
+  font-size: 62px;
+  text-align: center;
+  font-weight: 400;
+  color: #ffffff; /* default purple */
+  width: 100%;
+  outline: none;
+  caret-color: #ffffff;
+  text-transform: uppercase;
+  transition: color 0.5s ease;
+  }
+
+  input[type="text"].white-text {
+  color: #ffffff;
+  }
+
+  input[type="text"]::placeholder {
+  color: rgba(255, 255, 255, 0.4);
+  }
+
+
+  #input-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 12px;
+  }
+
+
+  #submit-btn, #upload-btn {
+    font-size: 78px;
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: #ffffff;
+  }
+
+  #submit-btn:hover, #upload-btn:hover {
+    color: #000000;
+  }
+
+  .hint {
+    position: absolute;
+    bottom: 20px;
+    right: 30px;
+    font-size: 14px;
+    color:#ffffff;
+    font-style: italic;
+    z-index: 2;
+    user-select: none;
+  }
+
+  #file-input {
+    display: none;
+  }
+
+  #input-wrapper.dragover {
+    border-bottom: 2px dashed #6c5ce7;
+  }
+
+  .example-folds-container {
+    margin-top: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+
+  .example-label {
+    color: rgba(255, 255, 255, 0.7);
+    font-size: 13px;
+    font-style: italic;
+  }
+
+  .example-pill {
+    background: rgba(0, 0, 0, 0.35);
+    backdrop-filter: blur(8px);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    color: #ffffff;
+    padding: 6px 14px;
+    border-radius: 20px;
+    font-size: 13px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-family: 'Inter', sans-serif;
+  }
+
+  .example-pill:hover {
+    background: rgba(255, 255, 255, 0.9);
+    color: #000000;
+    transform: translateY(-2px);
+  }

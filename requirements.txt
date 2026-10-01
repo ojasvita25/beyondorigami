@@ -1,0 +1,14 @@
+fastapi
+uvicorn
+pillow
+torch
+torchvision
+diffusers
+transformers
+accelerate
+safetensors
+peft
+spaces
+gradio==4.44.0
+huggingface_hub==0.24.7
+starlette==0.35.1
