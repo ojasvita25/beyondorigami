@@ -96,8 +96,8 @@ with gr.Blocks(title="Beyond Origami") as demo:
         examples=[
             ["static/examples/butterfly.jpg", "futuristic robot"],
             ["static/examples/spider.jpg", "cat"],
-            ["static/examples/bird.jpg", "ocean"],
-            ["static/examples/owl.jpg", "dog"],
+            ["static/examples/bird.jpg", "dungeon"],
+            ["static/examples/cicada.jpg", "dog"],
         ],
         inputs=[img_in, prompt_in],
         outputs=img_out,
