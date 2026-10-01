@@ -3,23 +3,13 @@ import base64
 import torch
 import spaces
 from PIL import Image
-from fastapi import FastAPI, HTTPException
+from fastapi import HTTPException
 from fastapi.responses import StreamingResponse, FileResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from diffusers import AutoPipelineForImage2Image, LCMScheduler
 import gradio as gr
-
-app = FastAPI()
-
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
 
 # Load SD 1.5 DreamShaper 8 Pipeline at startup
 MODEL_ID = "Lykon/dreamshaper-8"
@@ -54,7 +44,29 @@ def generate_image_gpu(input_image: Image.Image, prompt: str):
     return output
 
 
-@app.post("/get-image")
+# Create Gradio Interface - enables ZeroGPU startup hook detection
+demo = gr.Interface(
+    fn=generate_image_gpu,
+    inputs=[
+        gr.Image(type="pil", label="Upload Fold"),
+        gr.Textbox(label="Prompt", placeholder="Describe how to reimagine your fold...")
+    ],
+    outputs=gr.Image(type="pil", label="Reimagined Origami"),
+    title="Beyond Origami",
+    description="Origami x AI reimaginings powered by SD 1.5 LCM on Free ZeroGPU."
+)
+
+# Enable CORS on demo.app
+demo.app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+# Mount custom API endpoint & static files directly onto demo.app
+@demo.app.post("/get-image")
 async def get_image(request: PromptRequest):
     try:
         # Decode base64 input image
@@ -75,27 +87,12 @@ async def get_image(request: PromptRequest):
         raise HTTPException(status_code=500, detail=str(e))
 
 
-# Serve static files & index.html
-app.mount("/static", StaticFiles(directory="static"), name="static")
+demo.app.mount("/static", StaticFiles(directory="static"), name="static")
 
-@app.get("/")
+@demo.app.get("/")
 def read_root():
     return FileResponse("index.html")
 
 
-demo = gr.Interface(
-    fn=generate_image_gpu,
-    inputs=[
-        gr.Image(type="pil", label="Upload Fold"),
-        gr.Textbox(label="Prompt", placeholder="Describe how to reimagine your fold...")
-    ],
-    outputs=gr.Image(type="pil", label="Reimagined Origami"),
-    title="Beyond Origami",
-    description="Origami x AI reimaginings powered by SD 1.5 LCM on Free ZeroGPU."
-)
-
-app = gr.mount_gradio_app(app, demo, path="/gradio")
-
 if __name__ == "__main__":
-    import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=7860)
+    demo.launch(server_name="0.0.0.0", server_port=7860)
