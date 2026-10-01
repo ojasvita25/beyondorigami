@@ -60,11 +60,11 @@ def generate_image(input_image: Image.Image, prompt: str, steps: int = 8, cfg: f
 
 # Clean & simple Gradio UI for Hugging Face Space
 with gr.Blocks(title="Beyond Origami") as demo:
-    gr.Markdown("# 🎨 Beyond Origami\nUpload an image of your fold and enter a prompt to reimagine your Origami.")
+    gr.Markdown("# 🎨 Beyond Origami\nUpload an image of your fold or pick a sample origami image below, then enter a prompt to reimagine your Origami.")
 
     with gr.Row():
         with gr.Column():
-            img_in = gr.Image(type="pil", label="Upload Fold Image")
+            img_in = gr.Image(type="pil", label="Upload or Pick Fold Image")
             prompt_in = gr.Textbox(
                 label="Prompt",
                 placeholder="e.g. bioluminescent crystal wings, masterpiece, highly detailed",
@@ -86,6 +86,21 @@ with gr.Blocks(title="Beyond Origami") as demo:
         inputs=[img_in, prompt_in, steps_slider, cfg_slider, strength_slider],
         outputs=img_out,
         api_name=False
+    )
+
+    gr.Examples(
+        examples=[
+            ["static/examples/butterfly.jpg", "origami butterfly in a mystical crystal forest"],
+            ["static/examples/spider.jpg", "origami spider on a golden cybernetic web"],
+            ["static/examples/crane.jpg", "origami crane soaring through vibrant aurora borealis sky"],
+            ["static/examples/dragon.jpg", "origami dragon made of glowing magma and emerald scale detail"],
+            ["static/examples/flower.jpg", "origami rose blooming with glowing stardust under moonlight"],
+        ],
+        inputs=[img_in, prompt_in],
+        outputs=img_out,
+        fn=generate_image,
+        cache_examples=False,
+        label="💡 Sample Origami Folds & Prompts (Click to try)"
     )
 
 if __name__ == "__main__":
