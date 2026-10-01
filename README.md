@@ -8,7 +8,7 @@ sdk_version: "4.44.0"
 app_file: app.py
 pinned: false
 license: mit
-short_description: Origami x AI reimaginings powered by SD 1.5 LCM on ZeroGPU
+short_description: Origami x AI powered by SD 1.5 LCM on ZeroGPU
 ---
 
 # 🎨 BeyondOrigami
