@@ -83,7 +83,17 @@ def read_root():
     return FileResponse("index.html")
 
 
-demo = gr.Blocks()
+demo = gr.Interface(
+    fn=generate_image_gpu,
+    inputs=[
+        gr.Image(type="pil", label="Upload Fold"),
+        gr.Textbox(label="Prompt", placeholder="Describe how to reimagine your fold...")
+    ],
+    outputs=gr.Image(type="pil", label="Reimagined Origami"),
+    title="Beyond Origami",
+    description="Origami x AI reimaginings powered by SD 1.5 LCM on Free ZeroGPU."
+)
+
 app = gr.mount_gradio_app(app, demo, path="/gradio")
 
 if __name__ == "__main__":
