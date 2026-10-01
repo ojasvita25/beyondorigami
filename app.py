@@ -3,11 +3,10 @@ import base64
 import torch
 import spaces
 from PIL import Image
-from fastapi import HTTPException
+from fastapi import Request, HTTPException
 from fastapi.responses import StreamingResponse, FileResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
-from pydantic import BaseModel
 from diffusers import AutoPipelineForImage2Image, LCMScheduler
 import gradio as gr
 
@@ -22,11 +21,6 @@ pipe.scheduler = LCMScheduler.from_config(pipe.scheduler.config)
 
 # Load LCM LoRA for fast 2-4 step inference
 pipe.load_lora_weights("latent-consistency/lcm-lora-sdv1-5")
-
-
-class PromptRequest(BaseModel):
-    prompt: str
-    image: str  # base64 string
 
 
 # HF ZeroGPU function allocation
@@ -65,17 +59,21 @@ demo.app.add_middleware(
     allow_headers=["*"],
 )
 
-# Mount custom API endpoint & static files directly onto demo.app
+
 @demo.app.post("/get-image")
-async def get_image(request: PromptRequest):
+async def get_image(request: Request):
     try:
+        data = await request.json()
+        prompt = data.get("prompt", "")
+        image_str = data.get("image", "")
+
         # Decode base64 input image
-        image_bytes = base64.b64decode(request.image)
+        image_bytes = base64.b64decode(image_str)
         input_img = Image.open(io.BytesIO(image_bytes)).convert("RGB")
         input_img = input_img.resize((512, 512))
 
         # Run inference on ZeroGPU
-        result_img = generate_image_gpu(input_img, request.prompt)
+        result_img = generate_image_gpu(input_img, prompt)
 
         # Return image as PNG stream
         buf = io.BytesIO()
