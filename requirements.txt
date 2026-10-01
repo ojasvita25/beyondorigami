@@ -1,4 +1,12 @@
 fastapi
 uvicorn
-websocket-client
 pillow
+torch
+torchvision
+diffusers
+transformers
+accelerate
+safetensors
+spaces
+gradio
+websocket-client
