@@ -3,6 +3,8 @@ ori/
 venv/
 .venv/
 env/
+.env
+env
 
 # Python
 __pycache__/
@@ -18,8 +20,10 @@ Thumbs.db
 
 # Screen recordings (too large for GitHub)
 *.gif
-!demo.gif
+*.png
+templates/demo_imgs/
 *.mp4
+
 
 # IDE
 .vscode/
