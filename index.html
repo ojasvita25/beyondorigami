@@ -26,6 +26,11 @@
       <button id="clear-history-btn" title="Clear Saved Images">🗑️ Clear History</button>
 
     </div>
+    <div class="example-folds-container">
+      <span class="example-label">Try an example fold:</span>
+      <button class="example-pill" data-img="/static/examples/butterfly.jpg" data-prompt="origami butterfly in a mystical crystal forest">🦋 Butterfly</button>
+      <button class="example-pill" data-img="/static/examples/spider.jpg" data-prompt="origami spider on a golden cybernetic web">🕷️ Spider</button>
+    </div>
   </div>
 
   <div class="hint">Note: Click + for image → to Reimagine</div>
@@ -138,6 +143,7 @@
     const submitBtn = document.getElementById('submit-btn');
 
     let uploadedFileURL = null;
+    let currentImageFile = null;
 
     uploadBtn.addEventListener('click', () => {
       fileInput.click();
@@ -145,7 +151,8 @@
 
     fileInput.addEventListener('change', (e) => {
       if (e.target.files.length > 0) {
-        setUploadedBackground(e.target.files[0]);
+        currentImageFile = e.target.files[0];
+        setUploadedBackground(currentImageFile);
       }
     });
 
@@ -165,8 +172,25 @@
       const dt = e.dataTransfer;
       if (dt.files && dt.files.length > 0) {
         fileInput.files = dt.files;
-        setUploadedBackground(dt.files[0]);
+        currentImageFile = dt.files[0];
+        setUploadedBackground(currentImageFile);
       }
+    });
+
+    document.querySelectorAll('.example-pill').forEach(pill => {
+      pill.addEventListener('click', async () => {
+        const imgPath = pill.getAttribute('data-img');
+        const promptText = pill.getAttribute('data-prompt');
+        inputField.value = promptText;
+        try {
+          const res = await fetch(imgPath);
+          const blob = await res.blob();
+          currentImageFile = new File([blob], 'example.jpg', { type: 'image/jpeg' });
+          setUploadedBackground(currentImageFile);
+        } catch (err) {
+          console.error('Error loading example:', err);
+        }
+      });
     });
 
     submitBtn.addEventListener('click', fetchImage);
@@ -185,7 +209,7 @@
 
     async function fetchImage() {
       const inputValue = inputField.value.trim();
-      const file = fileInput.files[0];
+      const file = fileInput.files[0] || currentImageFile;
       if (!inputValue || !file) return;
 
       background.style.filter = 'blur(8px)';

@@ -104,3 +104,37 @@
   #input-wrapper.dragover {
     border-bottom: 2px dashed #6c5ce7;
   }
+
+  .example-folds-container {
+    margin-top: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+
+  .example-label {
+    color: rgba(255, 255, 255, 0.7);
+    font-size: 13px;
+    font-style: italic;
+  }
+
+  .example-pill {
+    background: rgba(0, 0, 0, 0.35);
+    backdrop-filter: blur(8px);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    color: #ffffff;
+    padding: 6px 14px;
+    border-radius: 20px;
+    font-size: 13px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-family: 'Inter', sans-serif;
+  }
+
+  .example-pill:hover {
+    background: rgba(255, 255, 255, 0.9);
+    color: #000000;
+    transform: translateY(-2px);
+  }
