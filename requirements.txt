@@ -9,5 +9,4 @@ accelerate
 safetensors
 peft
 spaces
-gradio>=5.16.0
-websocket-client
+gradio==4.44.0
