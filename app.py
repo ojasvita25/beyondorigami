@@ -30,17 +30,16 @@ if os.path.exists(CUSTOM_LORA):
 
 # HF ZeroGPU function allocation
 @spaces.GPU
-def generate_image(input_image: Image.Image, prompt: str, steps: int = 8, cfg: float = 1.5, strength: float = 0.45, seed: int = 42, randomize_seed: bool = True):
+def generate_image(input_image: Image.Image, prompt: str, steps: int = 4, cfg: float = 1.5, strength: float = 0.45, seed: int = 42, randomize_seed: bool = True):
     if input_image is None or not prompt or not prompt.strip():
         return None
 
     # 1. Capture original dimensions & aspect ratio
     orig_w, orig_h = input_image.size
 
-    # 2. Prevent 0 actual steps calculation in diffusers (steps * strength >= 1)
-    actual_steps = int(steps * strength)
-    if actual_steps < 1:
-        steps = int(1.0 / max(strength, 0.05)) + 1
+    # 2. Calculate total pipeline inference steps so diffusers executes the user's requested actual_steps
+    actual_steps = max(1, int(steps))
+    pipeline_steps = max(1, int(round(actual_steps / max(strength, 0.01))))
 
     # 3. Calculate aspect-ratio-preserving dimensions (max dimension 512, divisible by 8)
     scale = 512.0 / max(orig_w, orig_h)
@@ -62,7 +61,7 @@ def generate_image(input_image: Image.Image, prompt: str, steps: int = 8, cfg: f
         prompt=prompt,
         negative_prompt="bad anatomy, extra fingers, watermark, blurred, low quality, distortion, noise",
         image=input_img,
-        num_inference_steps=int(steps),
+        num_inference_steps=pipeline_steps,
         guidance_scale=float(cfg),
         strength=float(strength),
         generator=generator,
@@ -88,9 +87,9 @@ with gr.Blocks(title="Beyond Origami") as demo:
 
             with gr.Accordion("⚙️ Quality & Advanced Settings", open=False):
                 steps_slider = gr.Slider(
-                    minimum=4, maximum=20, value=8, step=1,
-                    label="Inference Steps (LCM)",
-                    info="Higher values refine image details and overall quality (8-12 recommended)."
+                    minimum=2, maximum=12, value=4, step=1,
+                    label="Actual Denoising Steps (LCM)",
+                    info="The exact number of denoising iterations executed (4-8 recommended for high quality)."
                 )
                 strength_slider = gr.Slider(
                     minimum=0.10, maximum=0.90, value=0.45, step=0.05,
